@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="mk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Откуп на терен</title>
+<meta name="description" content="Внес на откупено млеко на терен — Ѓоргиеви ДООЕЛ. Работи и без сигнал.">
+<meta name="theme-color" content="#2f6b3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Откуп">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Fira+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  /* Една колона за палец: сè што се допира е широко колку екранот,
+     редоследот на екранот е редоследот на работата — скенирај, впиши, прати. */
+  :root{
+    --mleko:#f7f9f7;        /* подлога */
+    --hartija:#ffffff;      /* картичка */
+    --mastilo:#16201c;      /* текст */
+    --bledo:#5f7168;        /* втор текст */
+    --rab:#d6dedb;
+    --pasha:#2f6b3a;         /* акцент — зелена од млекарата */
+    --pasa-meko:#e6f1e9;
+    --alarm:#a32b2b;
+    --vnimanie:#9a6516;
+    color-scheme: light;
+    --senka:0 1px 2px rgba(22,32,28,.06), 0 4px 14px rgba(22,32,28,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --mleko:#121714; --hartija:#1b2320; --mastilo:#e6ece9; --bledo:#94a69e;
+      --rab:#2f3b36; --pasha:#5ba06a; --pasa-meko:#1f2f25; --alarm:#e07b7b; --vnimanie:#d9a441;
+      color-scheme: dark;
+      --senka:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --mleko:#121714; --hartija:#1b2320; --mastilo:#e6ece9; --bledo:#94a69e;
+    --rab:#2f3b36; --pasha:#5ba06a; --pasa-meko:#1f2f25; --alarm:#e07b7b; --vnimanie:#d9a441;
+    color-scheme: dark;
+    --senka:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; background:var(--mleko); color:var(--mastilo);
+    font-family:"Fira Sans","Segoe UI",system-ui,sans-serif;
+    font-size:16px; line-height:1.45;
+  }
+  .top{
+    position:sticky; top:env(safe-area-inset-top, 0px); z-index:20;
+    background:var(--pasha); color:#fff;
+    padding:11px 16px; display:flex; align-items:center; gap:12px;
+  }
+  .top .ime{font-family:"Bitter",Georgia,serif; font-weight:700; font-size:18px; line-height:1.1;}
+  .top .pod{font-size:12.5px; opacity:.88; margin-top:2px;}
+  .znak{
+    font-size:11px; font-weight:600; padding:4px 9px; border-radius:20px;
+    background:rgba(255,255,255,.18); white-space:nowrap; flex:none; letter-spacing:.02em;
+  }
+  .znak.lose{background:var(--vnimanie); color:#1a1205;}
+  .obvivka{max-width:600px; margin:0 auto; padding:16px; padding-block:16px;}
+  .karta{
+    background:var(--hartija); border:1px solid var(--rab); border-radius:14px;
+    padding:16px; margin-bottom:14px; box-shadow:var(--senka);
+  }
+  .karta > h2{
+    margin:0 0 12px; font-family:"Fira Sans",sans-serif; font-size:12px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--bledo);
+  }
+  label{display:block; font-size:13px; color:var(--bledo); margin-bottom:5px; font-weight:500;}
+  input,select,button,textarea{font:inherit;}
+  input,select{
+    width:100%; padding:13px 12px; border:1px solid var(--rab); border-radius:10px;
+    background:var(--mleko); color:var(--mastilo); font-size:16px;
+  }
+  input:focus-visible,select:focus-visible,button:focus-visible{
+    outline:3px solid var(--pasha); outline-offset:2px;
+  }
+  .polje + .polje{margin-top:12px;}
+  .kop{
+    display:block; width:100%; padding:15px 14px; border:none; border-radius:12px;
+    background:var(--pasha); color:#fff; font-weight:700; font-size:16px; cursor:pointer;
+    text-align:center; letter-spacing:.01em;
+  }
+  .kop:active{transform:translateY(1px);}
+  .kop.golem{font-size:18px; padding:18px;}
+  .kop.tivok{background:var(--hartija); color:var(--pasha); border:2px solid var(--pasha);}
+  .kop.crven{background:var(--alarm);}
+  .kop[disabled]{opacity:.4; cursor:default;}
+  .kop + .kop{margin-top:9px;}
+
+  .jazicinja{display:flex; gap:7px; margin-bottom:14px;}
+  .jazicinja button{
+    flex:1; padding:12px 4px; border:1px solid var(--rab); border-radius:11px;
+    background:var(--hartija); color:var(--bledo); font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .jazicinja button[aria-selected="true"]{background:var(--pasha); color:#fff; border-color:var(--pasha);}
+  .jazicinja .brojka{
+    display:inline-block; min-width:19px; margin-left:4px; padding:0 5px;
+    background:var(--vnimanie); color:#fff; border-radius:10px; font-size:11px; font-weight:700;
+  }
+
+  .najden{background:var(--pasa-meko); border:2px solid var(--pasha); border-radius:12px; padding:14px; margin-bottom:14px;}
+  .najden .ime{font-family:"Bitter",Georgia,serif; font-size:21px; font-weight:700; line-height:1.2;}
+  .najden .det{font-size:13px; color:var(--bledo); margin-top:4px;}
+  .najden .vid{
+    display:inline-block; margin-top:8px; padding:4px 11px; border-radius:20px;
+    background:var(--pasha); color:#fff; font-size:13px; font-weight:700;
+  }
+  .kazi{
+    border-radius:12px; padding:13px; margin-bottom:14px; font-weight:600; font-size:14.5px;
+    background:var(--hartija); border:2px solid var(--vnimanie); color:var(--vnimanie);
+  }
+  .kazi.lose{border-color:var(--alarm); color:var(--alarm);}
+
+  .stavki{list-style:none; margin:0; padding:0;}
+  .stavki li{display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--rab);}
+  .stavki li:last-child{border-bottom:none;}
+  .sifra{
+    font-family:"JetBrains Mono",ui-monospace,monospace; font-size:12px; color:var(--bledo);
+    flex:none; width:66px; font-weight:500;
+  }
+  .lice{flex:1; min-width:0; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .lice small{color:var(--bledo); font-size:12px;}
+  .kolku{font-family:"JetBrains Mono",monospace; font-weight:700; font-variant-numeric:tabular-nums; flex:none;}
+  .stavki li.gotova{opacity:.55;}
+  .kvacka{color:var(--pasha); font-weight:700; flex:none;}
+  .trgni{flex:none; background:none; border:none; color:var(--alarm); font-size:19px; padding:2px 5px; cursor:pointer; line-height:1;}
+  .zbir{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding-top:12px; margin-top:8px; border-top:2px solid var(--rab); font-weight:700;
+  }
+  .zbir .broj{font-family:"JetBrains Mono",monospace; font-size:19px; font-variant-numeric:tabular-nums;}
+  .nista{color:var(--bledo); font-size:14px; text-align:center; padding:18px 8px;}
+  .nista strong{display:block; color:var(--mastilo); font-size:15px; margin-bottom:5px; font-family:"Bitter",Georgia,serif;}
+  .sitno{font-size:12.5px; color:var(--bledo); margin-top:10px; line-height:1.5;}
+  .red{display:flex; gap:9px;} .red > *{flex:1; min-width:0;}
+  .red .tesen{flex:0 0 104px;}
+  [hidden]{display:none !important;}
+  .poraka{
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:calc(22px + env(safe-area-inset-bottom, 0px)); z-index:60;
+    background:var(--mastilo); color:var(--mleko); padding:13px 20px; border-radius:26px;
+    font-size:15px; font-weight:600; box-shadow:0 8px 26px rgba(0,0,0,.28); max-width:88%; text-align:center;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important; transition:none !important;} }
+.smetka{display:flex; align-items:center; gap:10px; font-size:14px;}
+.smetka .ko{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.top{padding-top:calc(11px + env(safe-area-inset-top, 0px));}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div style="flex:1; min-width:0;">
+    <div class="ime">Откуп на терен</div>
+    <div class="pod" id="pod">Ѓоргиеви ДООЕЛ</div>
+  </div>
+  <span class="znak" id="znak">…</span>
+</div>
+
+<div class="obvivka">
+  <div class="jazicinja" role="tablist">
+    <button role="tab" id="jSken" aria-selected="true">Скенирај</button>
+    <button role="tab" id="jList" aria-selected="false">Денес</button>
+    <button role="tab" id="jPrati" aria-selected="false">Прати<span class="brojka" id="brCeka" hidden>0</span></button>
+  </div>
+
+  <!-- ── подесување ── -->
+  <section id="ekPodesi">
+    <div class="karta">
+      <h2>Кој си и каде си</h2>
+      <div class="polje">
+        <label for="koj">Име на откупувачот</label>
+        <input type="text" id="koj" autocomplete="name" placeholder="на пр. Јашар">
+      </div>
+      <div class="polje">
+        <label for="den">Датум на откуп</label>
+        <input type="date" id="den">
+      </div>
+      <div class="polje">
+        <label for="reon">Реон</label>
+        <select id="reon"><option value="">се вчитува…</option></select>
+      </div>
+      <button class="kop golem" id="pocni" style="margin-top:16px;">Почни со внес</button>
+      <p class="sitno">Ова се памети на таблетот. Го менуваш само кога ќе се смени денот или реонот.</p>
+    </div>
+    <div class="karta" id="kartaNajavaPodesi" hidden>
+      <h2>Сметка</h2>
+      <div class="kazi">Таблетот не е најавен. Најави се еднаш, додека има интернет, за да го повлечеш списокот.</div>
+      <button class="kop" id="najava2">Најави се</button>
+    </div>
+  </section>
+
+  <!-- ── скенирање ── -->
+  <section id="ekSken" hidden>
+    <div class="karta">
+      <h2>Земи го кооперантот</h2>
+      <button class="kop golem" id="slikaj">📷 Сликај го QR-кодот</button>
+      <input type="file" id="foto" accept="image/*" capture="environment" hidden>
+      <p class="sitno" id="fotoPoraka">Сликај го малиот квадрат до името на дневниот лист. Ако кодот е извалкан или мокар, впиши ја шифрата подолу.</p>
+    </div>
+    <div class="karta">
+      <h2>Или впиши шифра</h2>
+      <div class="red">
+        <input type="text" id="rakaSifra" placeholder="6053/2" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="kop tivok tesen" id="rakaNajdi" style="margin-top:0;">Најди</button>
+      </div>
+      <div id="predlozi"></div>
+    </div>
+  </section>
+
+  <!-- ── внес ── -->
+  <section id="ekVnes" hidden>
+    <div id="kutijaNajden"></div>
+    <div class="karta">
+      <div class="polje">
+        <label for="litri">Литри</label>
+        <input type="text" id="litri" inputmode="decimal" placeholder="0" autocomplete="off">
+      </div>
+      <div class="polje" id="poljeVid" hidden>
+        <label for="vid">Вид млеко</label>
+        <select id="vid"></select>
+      </div>
+      <div class="red" style="margin-top:12px;">
+        <div class="polje" style="margin-top:0;">
+          <label for="temp">Температура °C</label>
+          <input type="text" id="temp" inputmode="decimal" placeholder="—" autocomplete="off">
+        </div>
+        <div class="polje" style="margin-top:0;">
+          <label for="zabel">Забелешка</label>
+          <input type="text" id="zabel" placeholder="—" autocomplete="off">
+        </div>
+      </div>
+      <button class="kop golem" id="zacuvaj" style="margin-top:16px;">Зачувај</button>
+      <button class="kop tivok" id="nazad">Откажи</button>
+    </div>
+  </section>
+
+  <!-- ── список ── -->
+  <section id="ekList" hidden>
+    <div class="karta">
+      <h2 id="listNaslov">Внесено денес</h2>
+      <div id="spisok"></div>
+    </div>
+  </section>
+  <!-- ── праќање ── -->
+  <section id="ekPrati" hidden>
+    <div class="karta">
+      <h2>Праќање во канцеларија</h2>
+      <div id="statusPrati"></div>
+      <button class="kop golem" id="pratiKop" style="margin-top:14px;">Прати</button>
+      <p class="sitno">Внесовите стојат на таблетот додека не се пратат во канцеларија. Пратените остануваат видливи со ✓ и ништо не се брише само.</p>
+    </div>
+    <div class="karta">
+      <h2>Список на кооперанти</h2>
+      <div id="statusSpisok"></div>
+      <button class="kop tivok" id="osvezi" style="margin-top:12px;">Освежи го списокот</button>
+      <p class="sitno">Освежи по секоја промена во книгата — нов кооперант или нова шифра.</p>
+    </div>
+    <div class="karta">
+      <h2>Сметка</h2>
+      <div class="smetka"><span class="ko" id="smetkaIme">не е најавен</span><button class="kop tivok" id="najava" style="width:auto; padding:9px 14px; margin:0;">Најави се</button></div>
+      <p class="sitno" id="verzija"></p>
+    </div>
+  </section>
+</div>
+
+<script src="lib/jsQR.js"></script>
+<script src="lib/msal-browser.min.js"></script>
+<script src="config.js"></script>
+<script src="zaednicko.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

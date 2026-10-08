@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="mk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Откуп — поставување</title>
+<style>
+:root{--pasha:#2f6b3a;--rab:#d6dedb;--bledo:#5f7168;color-scheme:light;}
+body{margin:0;background:#f7f9f7;color:#16201c;font:16px/1.45 "Fira Sans","Segoe UI",system-ui,sans-serif;}
+.top{background:var(--pasha);color:#fff;padding:14px 18px;font-weight:700;font-size:18px;}
+.ob{max-width:760px;margin:0 auto;padding:16px;}
+.k{background:#fff;border:1px solid var(--rab);border-radius:14px;padding:16px;margin-bottom:14px;}
+h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--bledo);}
+button{font:inherit;padding:12px 16px;border:none;border-radius:10px;background:var(--pasha);color:#fff;font-weight:700;cursor:pointer;}
+button.t{background:#fff;color:var(--pasha);border:2px solid var(--pasha);}
+button[disabled]{opacity:.4}
+.s{font-size:13px;color:var(--bledo);margin-top:8px;}
+pre{background:#f1f5f2;border-radius:10px;padding:10px;font-size:12.5px;white-space:pre-wrap;max-height:260px;overflow:auto;}
+.ok{color:#2f6b3a;font-weight:600}.ne{color:#a32b2b;font-weight:600}
+input[type=file]{font:inherit}
+</style></head><body>
+<div class="top">Откуп на терен — поставување (канцеларија)</div>
+<div class="ob">
+  <div class="k"><h2>1. Сметка</h2>
+    <div id="sm">…</div>
+    <button id="najava" style="margin-top:10px;">Најави се</button>
+    <p class="s">Најави се со сметка што има право да создава листи на SharePoint сајтот <b id="sajt"></b>.</p>
+  </div>
+  <div class="k"><h2>2. Листи во SharePoint</h2>
+    <button id="listi" disabled>Создај ги листите</button>
+    <p class="s">Ги прави „<span id="l1"></span>“ и „<span id="l2"></span>“ ако не постојат. Може да се повтори безбедно.</p>
+    <pre id="izl1" hidden></pre>
+  </div>
+  <div class="k"><h2>3. Внеси кооперанти од JSON</h2>
+    <input type="file" id="json" accept="application/json,.json" disabled>
+    <button id="uvezi" class="t" disabled style="margin-left:8px;">Увези</button>
+    <p class="s">Датотека како <b>spisok_site_2026-10-05.json</b> (поле „lista“). Шифрите што веќе постојат во листата се прескокнуваат.</p>
+    <pre id="izl2" hidden></pre>
+  </div>
+  <div class="k"><h2>4. Проверка</h2>
+    <button id="proveri" class="t" disabled>Колку кооперанти има во листата?</button>
+    <pre id="izl3" hidden></pre>
+  </div>
+</div>
+<script src="lib/msal-browser.min.js"></script><script src="config.js"></script><script src="zaednicko.js"></script>
+<script>
+(function(){
+  function el(i){ return document.getElementById(i); }
+  function pisi(id, t, dodaj){ var p = el(id); p.hidden = false; p.textContent = dodaj ? p.textContent + t + "\n" : t + "\n"; }
+  el("sajt").textContent = Otkup.config.site; el("l1").textContent = Otkup.config.listaKooperanti; el("l2").textContent = Otkup.config.listaVnesovi;
+  function crtaj(){
+    var a = Otkup.smetka();
+    el("sm").innerHTML = a ? '<span class="ok">Најавен:</span> ' + (a.name || "") + " · " + a.username : '<span class="ne">Не е најавен</span>';
+    el("najava").textContent = a ? "Одјави се" : "Најави се";
+    ["listi","json","uvezi","proveri"].forEach(function(i){ el(i).disabled = !a; });
+  }
+  el("najava").addEventListener("click", function(){ Otkup.smetka() ? Otkup.odjavi() : Otkup.najavi(); });
+  el("listi").addEventListener("click", function(){
+    pisi("izl1", "Работам…");
+    Otkup.sozdadiListi().then(function(r){ pisi("izl1", "Кооперанти: " + r.kooperanti + "\nВнесови: " + r.vnesovi); })
+      .catch(function(e){ pisi("izl1", "Грешка: " + e.message + (e.graph ? "\n" + JSON.stringify(e.graph, null, 1) : "")); });
+  });
+  el("uvezi").addEventListener("click", function(){
+    var f = el("json").files && el("json").files[0];
+    if(!f){ pisi("izl2", "Избери датотека."); return; }
+    f.text().then(function(t){
+      var d = JSON.parse(t), lista = d.lista || d;
+      if(!Array.isArray(lista)) throw new Error("Нема поле „lista“");
+      pisi("izl2", "Во датотеката: " + lista.length + ". Читам што веќе има во листата…");
+      return Otkup.kooperanti().then(function(ima){
+        var zafateni = {}; ima.forEach(function(x){ zafateni[x.sifra] = true; });
+        var novi = lista.filter(function(x){ return x.sifra && !zafateni[x.sifra]; });
+        pisi("izl2", "Веќе постојат: " + (lista.length - novi.length) + ". За внес: " + novi.length, true);
+        var i = 0, losi = 0;
+        function sledno(){
+          if(i >= novi.length){ pisi("izl2", "Готово. Внесени " + (novi.length - losi) + ", грешки " + losi, true); return; }
+          var x = novi[i++];
+          return Otkup.dodajKooperant(x).catch(function(e){ losi++; pisi("izl2", "✕ " + x.sifra + " " + x.ime + ": " + e.message, true); })
+            .then(function(){ if(i % 10 === 0) pisi("izl2", "… " + i + " од " + novi.length, true); return sledno(); });
+        }
+        return sledno();
+      });
+    }).catch(function(e){ pisi("izl2", "Грешка: " + e.message, true); });
+  });
+  el("proveri").addEventListener("click", function(){
+    pisi("izl3", "Читам…");
+    Otkup.kooperanti().then(function(l){
+      var po = {}; l.forEach(function(x){ var v = x.vidovi[0] || "?"; po[v] = (po[v] || 0) + 1; });
+      var brojevi = l.map(function(x){ var m = /^(\d+)\//.exec(x.sifra); return m ? Number(m[1]) : 0; }).filter(function(n){ return n < 1000; });
+      pisi("izl3", "Вкупно: " + l.length + " (активни " + l.filter(function(x){ return x.aktiven; }).length + ")\nПо вид: " + JSON.stringify(po) +
+        "\nНајголем број од книгата: " + (brojevi.length ? Math.max.apply(null, brojevi) : "—") + " → следна слободна: " + (brojevi.length ? Math.max.apply(null, brojevi) + 1 : "—"));
+    }).catch(function(e){ pisi("izl3", "Грешка: " + e.message); });
+  });
+  Otkup.init().then(crtaj).catch(function(e){ crtaj(); el("sm").innerHTML += '<div class="ne">' + e.message + '</div>'; });
+})();
+</script></body></html>

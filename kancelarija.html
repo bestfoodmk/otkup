@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="mk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Откуп — канцеларија</title>
+<style>
+:root{--pasha:#2f6b3a;--rab:#d6dedb;--bledo:#5f7168;color-scheme:light;}
+body{margin:0;background:#f7f9f7;color:#16201c;font:15px/1.45 "Fira Sans","Segoe UI",system-ui,sans-serif;}
+.top{background:var(--pasha);color:#fff;padding:14px 18px;font-weight:700;font-size:18px;display:flex;gap:12px;align-items:center;}
+.top span{flex:1}
+.ob{max-width:1100px;margin:0 auto;padding:16px;}
+.k{background:#fff;border:1px solid var(--rab);border-radius:14px;padding:16px;margin-bottom:14px;}
+h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--bledo);}
+button,input,select{font:inherit}
+button{padding:10px 14px;border:none;border-radius:10px;background:var(--pasha);color:#fff;font-weight:700;cursor:pointer;}
+button.t{background:#fff;color:var(--pasha);border:2px solid var(--pasha);}
+button.m{padding:5px 10px;font-size:13px;}
+input,select{padding:9px 10px;border:1px solid var(--rab);border-radius:9px;background:#fff;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th,td{padding:7px 8px;border-bottom:1px solid var(--rab);text-align:left;vertical-align:top;}
+th{font-size:12px;color:var(--bledo);text-transform:uppercase;letter-spacing:.05em;}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;font-family:"JetBrains Mono",ui-monospace,monospace;}
+.red{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.zbir{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;}
+.zbir div{background:#e6f1e9;border-radius:10px;padding:8px 12px;}
+.zbir b{display:block;font-size:20px;font-family:"JetBrains Mono",monospace;}
+.s{font-size:13px;color:var(--bledo);}
+.st-Примено{color:#9a6516;font-weight:600}.st-Потврдено{color:#2f6b3a;font-weight:600}.st-Одбиено{color:#a32b2b;font-weight:600}
+</style></head><body>
+<div class="top"><span>Откуп на терен — канцеларија</span><small id="sm">…</small><button id="najava" class="t" style="padding:7px 12px;">Најави се</button></div>
+<div class="ob">
+  <div class="k">
+    <div class="red">
+      <label>Ден <input type="date" id="den"></label>
+      <label>Откупувач <select id="koj"><option value="">сите</option></select></label>
+      <label>Реон <select id="reon"><option value="">сите</option></select></label>
+      <button id="vcitaj">Вчитај</button>
+      <button id="csv" class="t">Преземи CSV</button>
+      <button id="potvrdiSite" class="t">Потврди ги сите примени</button>
+    </div>
+    <div class="zbir" id="zbir"></div>
+  </div>
+  <div class="k"><div id="tabela" class="s">Најави се и притисни „Вчитај“.</div></div>
+  <div class="k"><h2>Следна слободна лабораториска шифра</h2><div id="sifri" class="s">—</div>
+    <p class="s">Правило од 05.10.2026: нов број никогаш претходно користен со кој било суфикс; суфикс /1 овчо, /2 кравјо, /3 козјо.</p></div>
+</div>
+<script src="lib/msal-browser.min.js"></script><script src="config.js"></script><script src="zaednicko.js"></script>
+<script>
+(function(){
+  var VID = {kravjo:"кравјо", ovco:"овчо", kozjo:"козјо"};
+  function el(i){ return document.getElementById(i); }
+  function denes(){ var d = new Date(), p = function(n){ return n < 10 ? "0"+n : ""+n; }; return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+  function fmt(n){ return String(Math.round(Number(n) * 10) / 10).replace(".", ","); }
+  var REDOVI = [];
+  el("den").value = denes();
+  function crtajSmetka(){ var a = Otkup.smetka(); el("sm").textContent = a ? (a.name || a.username) : "не е најавен"; el("najava").textContent = a ? "Одјави се" : "Најави се"; }
+  el("najava").addEventListener("click", function(){ Otkup.smetka() ? Otkup.odjavi() : Otkup.najavi(); });
+
+  function filtrirani(){
+    var k = el("koj").value, r = el("reon").value;
+    return REDOVI.filter(function(x){ return (!k || x.Koj === k) && (!r || String(x.Reon) === r); });
+  }
+  function napolni(sel, vrednosti){
+    var star = sel.value; sel.innerHTML = '<option value="">сите</option>';
+    vrednosti.sort().forEach(function(v){ var o = document.createElement("option"); o.value = v; o.textContent = v; sel.appendChild(o); });
+    sel.value = star;
+  }
+  function crtaj(){
+    var r = filtrirani(), h = el("tabela");
+    if(!r.length){ h.innerHTML = '<span class="s">Нема внесови за избраното.</span>'; el("zbir").innerHTML = ""; return; }
+    r.sort(function(a,b){ return String(a.Vreme).localeCompare(String(b.Vreme)); });
+    var vk = 0, poVid = {}, poKoj = {};
+    var t = '<table><thead><tr><th>Време</th><th>Откупувач</th><th>Реон</th><th>Шифра</th><th>Кооперант</th><th>Вид</th><th class="n">Литри</th><th class="n">°C</th><th>Забелешка</th><th>Статус</th><th></th></tr></thead><tbody>';
+    r.forEach(function(x){
+      vk += Number(x.Litri) || 0; poVid[x.Vid] = (poVid[x.Vid] || 0) + (Number(x.Litri) || 0); poKoj[x.Koj] = (poKoj[x.Koj] || 0) + (Number(x.Litri) || 0);
+      var v = x.Vreme ? new Date(x.Vreme).toLocaleTimeString("mk-MK", {hour:"2-digit", minute:"2-digit"}) : "";
+      t += "<tr><td>" + v + "</td><td>" + (x.Koj || "") + "</td><td>" + (x.ReonIme || x.Reon || "") + "</td><td>" + (x.Sifra || "") + "</td><td>" + (x.Title || "") + "</td><td>" + (VID[x.Vid] || x.Vid || "") +
+        '</td><td class="n">' + fmt(x.Litri) + '</td><td class="n">' + (x.Temp || "") + "</td><td>" + (x.Zabeleska || "") + '</td><td class="st-' + (x.Status || "") + '">' + (x.Status || "") + "</td><td>" +
+        (x.Status === "Примено" ? '<button class="m" data-id="' + x.id + '" data-st="Потврдено">Потврди</button> <button class="m t" data-id="' + x.id + '" data-st="Одбиено">Одбиј</button>' : "") + "</td></tr>";
+    });
+    t += "</tbody></table>"; h.innerHTML = t;
+    var z = '<div><span class="s">записи</span><b>' + r.length + '</b></div><div><span class="s">вкупно литри</span><b>' + fmt(vk) + '</b></div>';
+    Object.keys(poVid).forEach(function(v){ z += '<div><span class="s">' + (VID[v] || v) + '</span><b>' + fmt(poVid[v]) + '</b></div>'; });
+    Object.keys(poKoj).forEach(function(k){ z += '<div><span class="s">' + k + '</span><b>' + fmt(poKoj[k]) + '</b></div>'; });
+    el("zbir").innerHTML = z;
+    h.querySelectorAll("button[data-id]").forEach(function(b){ b.addEventListener("click", function(){
+      b.disabled = true;
+      Otkup.postaviStatus(b.dataset.id, b.dataset.st).then(function(){ var x = REDOVI.find(function(y){ return y.id === b.dataset.id; }); if(x) x.Status = b.dataset.st; crtaj(); })
+        .catch(function(e){ alert("Не успеа: " + e.message); b.disabled = false; });
+    }); });
+  }
+  el("vcitaj").addEventListener("click", function(){
+    el("tabela").innerHTML = '<span class="s">Вчитувам…</span>';
+    Otkup.vnesovi(el("den").value).then(function(r){
+      REDOVI = r;
+      napolni(el("koj"), Array.from(new Set(r.map(function(x){ return x.Koj || ""; }).filter(Boolean))));
+      napolni(el("reon"), Array.from(new Set(r.map(function(x){ return String(x.Reon || ""); }).filter(Boolean))));
+      crtaj();
+    }).catch(function(e){ el("tabela").innerHTML = '<span class="s">Грешка: ' + e.message + "</span>"; });
+  });
+  el("koj").addEventListener("change", crtaj); el("reon").addEventListener("change", crtaj);
+  el("potvrdiSite").addEventListener("click", function(){
+    var r = filtrirani().filter(function(x){ return x.Status === "Примено"; });
+    if(!r.length || !confirm("Потврди " + r.length + " внесови?")) return;
+    var i = 0; (function sledno(){ if(i >= r.length){ crtaj(); return; } var x = r[i++]; Otkup.postaviStatus(x.id, "Потврдено").then(function(){ x.Status = "Потврдено"; }).catch(function(){}).then(sledno); })();
+  });
+  el("csv").addEventListener("click", function(){
+    var r = filtrirani(); if(!r.length) return;
+    var k = ["Den","Vreme","Koj","Reon","ReonIme","Sifra","Title","Vid","Litri","Temp","Zabeleska","Status","LokalenId"];
+    var c = "﻿" + k.join(";") + "\n" + r.map(function(x){ return k.map(function(f){ var v = x[f] == null ? "" : String(x[f]); if(f === "Litri") v = v.replace(".", ","); return '"' + v.replace(/"/g, '""') + '"'; }).join(";"); }).join("\n");
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([c], {type:"text/csv;charset=utf-8"})); a.download = "otkup_" + el("den").value + ".csv"; a.click();
+  });
+  function sifri(){
+    Otkup.kooperanti().then(function(l){
+      var koristeni = {}, maks = 0;
+      l.forEach(function(x){ var m = /^(\d+)\/([123])$/.exec(x.sifra); if(m){ var n = Number(m[1]); if(n < 1000){ koristeni[n] = true; if(n > maks) maks = n; } } });
+      var sledna = maks + 1; while(koristeni[sledna]) sledna++;
+      el("sifri").innerHTML = "Во листата: " + l.length + " шифри. Најголем број од книгата: <b>" + maks + "</b>. Следна слободна: <b>" + sledna + "</b> (овчо " + sledna + "/1, кравјо " + sledna + "/2, козјо " + sledna + "/3).<br>" +
+        "<span class='s'>Проверено само во SharePoint листата — книгата во лабораторија е последен збор.</span>";
+    }).catch(function(e){ el("sifri").textContent = "Грешка: " + e.message; });
+  }
+  Otkup.init().then(function(a){ crtajSmetka(); if(a){ el("vcitaj").click(); sifri(); } }).catch(crtajSmetka);
+})();
+</script></body></html>

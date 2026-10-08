@@ -1,0 +1,16 @@
+{
+  "name": "Откуп на терен — Ѓоргиеви",
+  "short_name": "Откуп",
+  "description": "Внес на откупено млеко на терен, работи и без сигнал.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f9f7",
+  "theme_color": "#2f6b3a",
+  "lang": "mk",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
