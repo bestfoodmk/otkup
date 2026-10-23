@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="mk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Проверка на чистота</title>
+<meta name="description" content="IFS проверка на чистота за Фабрика и Млекара — еден човек, два клика.">
+<meta name="theme-color" content="#1f5f8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Чистота">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --pozadina:#f4f7f9; --karta:#ffffff; --tekst:#14212b; --bledo:#5d6f7c; --rab:#d5dee5;
+  --akcent:#1f5f8b; --akcent-meko:#e4eef5; --ok:#2f7a3d; --ok-meko:#e5f2e7; --ne:#b0322b; --ne-meko:#fbe8e6;
+  --vnimanie:#9a6516; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --pozadina:#10171c; --karta:#182229; --tekst:#e5ecf1; --bledo:#93a5b2; --rab:#2c3a44;
+  --akcent:#5fa3d3; --akcent-meko:#1c2e3b; --ok:#5fb36d; --ok-meko:#1b2e20; --ne:#e2796f; --ne-meko:#3a1f1c; --vnimanie:#d9a441; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --pozadina:#10171c; --karta:#182229; --tekst:#e5ecf1; --bledo:#93a5b2; --rab:#2c3a44;
+  --akcent:#5fa3d3; --akcent-meko:#1c2e3b; --ok:#5fb36d; --ok-meko:#1b2e20; --ne:#e2796f; --ne-meko:#3a1f1c; --vnimanie:#d9a441; color-scheme:dark; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--pozadina);color:var(--tekst);font:16px/1.45 "Fira Sans","Segoe UI",system-ui,sans-serif}
+button,input{font:inherit}
+.top{position:sticky;top:0;z-index:20;background:var(--akcent);color:#fff;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:12px}
+.top .ime{font-weight:700;font-size:18px;line-height:1.15}
+.top .pod{font-size:12.5px;opacity:.9}
+.top .nazad{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer}
+.znak{margin-left:auto;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,.18);white-space:nowrap}
+.znak.lose{background:var(--vnimanie);color:#1a1205}
+.ob{max-width:760px;margin:0 auto;padding:16px 16px 120px}
+.karta{background:var(--karta);border:1px solid var(--rab);border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.izbor{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:8px 0 18px}
+@media (max-width:520px){.izbor{grid-template-columns:1fr}}
+.golem{border:0;border-radius:18px;padding:28px 18px;text-align:left;cursor:pointer;background:var(--karta);border:2px solid var(--rab);color:var(--tekst)}
+.golem:active{transform:translateY(1px)}
+.golem .n{font-size:26px;font-weight:700}
+.golem .f{font-size:13px;color:var(--bledo);margin-top:2px}
+.golem .pr{margin-top:14px;font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:700}
+.golem .bar{height:8px;border-radius:6px;background:var(--rab);margin-top:6px;overflow:hidden}
+.golem .bar i{display:block;height:100%;background:var(--ok);width:0}
+.golem.gotov{border-color:var(--ok)}
+label.m{display:block;font-size:13px;color:var(--bledo);margin-bottom:5px;font-weight:500}
+input.t{width:100%;padding:12px;border:1px solid var(--rab);border-radius:10px;background:var(--pozadina);color:var(--tekst)}
+.sitno{font-size:12.5px;color:var(--bledo)}
+h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--bledo)}
+.sek{background:var(--karta);border:1px solid var(--rab);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.sek>header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.sek>header .nn{flex:1;min-width:0}
+.sek>header .nn b{display:block;font-size:15.5px}
+.sek>header .nn span{font-size:12px;color:var(--bledo)}
+.sek>header .br{font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:700;color:var(--bledo)}
+.sek.zatvorena .lista,.sek.zatvorena .site{display:none}
+.site{display:block;width:calc(100% - 28px);margin:0 14px 10px;padding:10px;border:1px dashed var(--ok);border-radius:10px;background:var(--ok-meko);color:var(--ok);font-weight:700;cursor:pointer}
+.lista{list-style:none;margin:0;padding:0;border-top:1px solid var(--rab)}
+.st{display:flex;align-items:stretch;border-bottom:1px solid var(--rab)}
+.st:last-child{border-bottom:0}
+.st .tap{flex:1;min-width:0;display:flex;gap:12px;align-items:center;padding:12px 14px;background:none;border:0;text-align:left;color:inherit;cursor:pointer}
+.st .kv{flex:none;width:30px;height:30px;border-radius:8px;border:2px solid var(--rab);display:grid;place-items:center;font-weight:700;font-size:17px}
+.st .tx{flex:1;min-width:0}
+.st .tx b{display:block;font-weight:500;font-size:15px}
+.st .tx small{display:block;font-size:12px;color:var(--bledo)}
+.st .fr{flex:none;font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--akcent-meko);color:var(--akcent)}
+.st .neb{flex:none;width:54px;border:0;border-left:1px solid var(--rab);background:none;color:var(--ne);font-size:20px;font-weight:700;cursor:pointer}
+.st.ok .kv{background:var(--ok);border-color:var(--ok);color:#fff}
+.st.ne{background:var(--ne-meko)}
+.st.ne .kv{background:var(--ne);border-color:var(--ne);color:#fff}
+.st .zab{display:none;width:100%;padding:0 14px 12px 56px}
+.st.ne{flex-wrap:wrap}
+.st.ne .zab{display:block}
+.st.ne .zab input{width:100%;padding:9px 10px;border:1px solid var(--ne);border-radius:9px;background:var(--karta);color:var(--tekst)}
+.st.nered{opacity:.5}
+.dno{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--karta);border-top:1px solid var(--rab);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center}
+.dno .pr{flex:1;font-size:14px}
+.dno .pr b{font-family:"JetBrains Mono",monospace;font-size:17px}
+.kop{border:0;border-radius:12px;padding:13px 18px;background:var(--akcent);color:#fff;font-weight:700;cursor:pointer}
+.kop.tivok{background:none;border:2px solid var(--akcent);color:var(--akcent)}
+.kop[disabled]{opacity:.4}
+.istorija li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--rab);font-size:14px}
+.istorija li:last-child{border-bottom:0}
+.istorija .s{margin-left:auto;font-weight:600}
+.poraka{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--tekst);color:var(--pozadina);padding:12px 18px;border-radius:24px;font-weight:600;max-width:90%;text-align:center}
+[hidden]{display:none!important}
+#pecati{display:none}
+@media print{
+  body{background:#fff;color:#000;font-size:11px}
+  .top,.dno,.ob,.poraka{display:none!important}
+  #pecati{display:block;padding:0}
+  #pecati h1{font-size:15px;margin:0 0 2px} #pecati p{margin:0 0 8px}
+  #pecati table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  #pecati th,#pecati td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}
+  #pecati th{background:#eee}
+  #pecati .sekt td{background:#f4f4f4;font-weight:700}
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <button class="nazad" id="nazad" hidden>‹ Назад</button>
+  <div><div class="ime" id="naslov">Проверка на чистота</div><div class="pod" id="podnaslov">IFS · Фабрика и Млекара</div></div>
+  <span class="znak" id="znak">…</span>
+</div>
+
+<div class="ob" id="ekPocetna">
+  <div class="izbor">
+    <button class="golem" id="kFabrika"><div class="n">Фабрика</div><div class="f">БЕСТФУД ТИ · У 4.10/1</div><div class="pr" id="prFabrika"></div><div class="bar"><i id="barFabrika"></i></div></button>
+    <button class="golem" id="kMlekara"><div class="n">Млекара</div><div class="f">Ѓоргиеви · ПП 02 ЗП</div><div class="pr" id="prMlekara"></div><div class="bar"><i id="barMlekara"></i></div></button>
+  </div>
+  <div class="karta">
+    <label class="m" for="koj">Кој проверува</label>
+    <input class="t" id="koj" placeholder="Име и презиме" autocomplete="name">
+    <p class="sitno" style="margin:8px 0 0">Се памети на уредот. Секоја ставка се запишува со ова име и часот.</p>
+  </div>
+  <div class="karta">
+    <h2>Пратени проверки</h2>
+    <ul class="istorija" id="istorija" style="list-style:none;margin:8px 0 0;padding:0"></ul>
+  </div>
+  <div class="karta">
+    <h2>Сметка</h2>
+    <div style="display:flex;gap:10px;align-items:center;margin-top:8px"><span id="smetka" style="flex:1">не е најавен</span><button class="kop tivok" id="najava" style="padding:8px 14px">Најави се</button></div>
+    <p class="sitno" style="margin:8px 0 0">Проверката работи и без интернет. Се праќа во SharePoint (Квалитет) штом има врска.</p>
+  </div>
+</div>
+
+<div class="ob" id="ekLista" hidden>
+  <div id="sekcii"></div>
+</div>
+
+<div class="dno" id="dno" hidden>
+  <div class="pr"><b id="brojac">0 / 0</b><br><span class="sitno" id="brojacNe"></span></div>
+  <button class="kop tivok" id="pecatiKop">Печати</button>
+  <button class="kop" id="zavrsi">Заврши</button>
+</div>
+
+<div id="pecati"></div>
+
+<script src="msal-browser.min.js"></script>
+<script src="config.js"></script>
+<script src="zaednicko.js"></script>
+<script src="cistota_podatoci.js"></script>
+<script>
+(function(){
+  "use strict";
+  var O = window.CISTOTA_OBJEKTI;
+  var SAJT = "bfgj.sharepoint.com:/sites/Kvalitet", LISTA = "CistotaProverki";
+  var FR = {"Д":"дневно","Н":"неделно","М":"месечно"};
+  var K_TEK = "cistota_tekovno_v1", K_RED = "cistota_red_v1", K_IST = "cistota_istorija_v1", K_KOJ = "cistota_koj_v1", K_POSL = "cistota_posledno_v1";
+
+  function el(id){ return document.getElementById(id); }
+  function citaj(k, a){ try{ var s = localStorage.getItem(k); return s ? JSON.parse(s) : a; }catch(e){ return a; } }
+  function pisi(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ kazi("Меморијата е полна."); } }
+  function p2(n){ return n < 10 ? "0" + n : "" + n; }
+  function denes(){ var d = new Date(); return d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate()); }
+  function cas(){ var d = new Date(); return p2(d.getHours()) + ":" + p2(d.getMinutes()); }
+  function mk(d){ var p = (d || "").split("-"); return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : d; }
+  function nedela(dstr){ var d = new Date(dstr + "T12:00:00"); var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); var dn = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - dn); var g = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return t.getUTCFullYear() + "-W" + Math.ceil(((t - g) / 864e5 + 1) / 7); }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+  function kazi(t, ms){ var d = document.createElement("div"); d.className = "poraka"; d.textContent = t; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, ms || 2600); }
+  function kluc(si, ii){ return si + "." + ii; }
+
+  // TEK[objekt] = {den, koj, stavki:{kluc:{s:"ok"|"ne", cas, koj, zab}}}
+  var TEK = citaj(K_TEK, {}), RED = citaj(K_RED, []), IST = citaj(K_IST, []), POSL = citaj(K_POSL, {});
+  var akt = null;
+
+  function zaDenes(ob){
+    var t = TEK[ob];
+    if(!t || t.den !== denes()){ t = TEK[ob] = {den: denes(), stavki: {}}; pisi(K_TEK, TEK); }
+    return t;
+  }
+  // Неделните/месечните се „на ред“ ако не се направени во оваа недела / овој месец.
+  function naRed(ob, imeSt, fr){
+    if(fr === "Д") return true;
+    var p = (POSL[ob] || {})[imeSt]; if(!p) return true;
+    if(fr === "Н") return nedela(p) !== nedela(denes());
+    if(fr === "М") return p.slice(0, 7) !== denes().slice(0, 7);
+    return true;
+  }
+  function presmetaj(ob){
+    var t = zaDenes(ob), vk = 0, ok = 0, ne = 0;
+    O[ob].sekcii.forEach(function(s, si){ s.stavki.forEach(function(st, ii){
+      var z = t.stavki[kluc(si, ii)];
+      if(!naRed(ob, st.ime, st.fr) && !z) return;
+      vk++; if(z && z.s === "ok") ok++; if(z && z.s === "ne") ne++;
+    }); });
+    return {vk: vk, ok: ok, ne: ne, gotovo: ok + ne};
+  }
+
+  // ── почетна ───────────────────────────────────────────────
+  function crtajPocetna(){
+    ["fabrika", "mlekara"].forEach(function(ob){
+      var r = presmetaj(ob), Ob = ob[0].toUpperCase() + ob.slice(1);
+      el("pr" + Ob).textContent = r.gotovo + " / " + r.vk + (r.ne ? " · " + r.ne + " не" : "");
+      el("bar" + Ob).style.width = (r.vk ? Math.round(100 * r.gotovo / r.vk) : 0) + "%";
+      el("k" + Ob).classList.toggle("gotov", r.vk > 0 && r.gotovo === r.vk);
+    });
+    var h = el("istorija"); h.innerHTML = "";
+    var site = RED.map(function(x){ return {x: x, ceka: true}; }).concat(IST.map(function(x){ return {x: x}; })).slice(0, 12);
+    if(!site.length){ h.innerHTML = '<li class="sitno">Сè уште нема.</li>'; }
+    site.forEach(function(r){ var li = document.createElement("li");
+      li.innerHTML = "<span>" + mk(r.x.den) + "</span><span>" + esc(O[r.x.objekt].ime) + "</span><span class='sitno'>" + r.x.ok + "/" + r.x.vk + (r.x.ne ? " · " + r.x.ne + " не" : "") + "</span><span class='s' style='color:var(" + (r.ceka ? "--vnimanie" : "--ok") + ")'>" + (r.ceka ? "чека" : "✓ пратено") + "</span>";
+      h.appendChild(li); });
+  }
+  function pokaziPocetna(){
+    akt = null; el("ekPocetna").hidden = false; el("ekLista").hidden = true; el("dno").hidden = true; el("nazad").hidden = true;
+    el("naslov").textContent = "Проверка на чистота"; el("podnaslov").textContent = "IFS · " + mk(denes());
+    crtajPocetna(); window.scrollTo(0, 0);
+  }
+
+  // ── листа ─────────────────────────────────────────────────
+  function otvori(ob){
+    if(!el("koj").value.trim()){ kazi("Прво впиши кој проверува."); el("koj").focus(); return; }
+    pisi(K_KOJ, el("koj").value.trim());
+    akt = ob; zaDenes(ob);
+    el("ekPocetna").hidden = true; el("ekLista").hidden = false; el("dno").hidden = false; el("nazad").hidden = false;
+    el("naslov").textContent = O[ob].ime + " — чистота"; el("podnaslov").textContent = mk(denes()) + " · " + el("koj").value.trim();
+    crtajLista(); window.scrollTo(0, 0);
+  }
+  function crtajLista(){
+    var ob = akt, t = zaDenes(ob), h = el("sekcii"); h.innerHTML = "";
+    O[ob].sekcii.forEach(function(s, si){
+      var sek = document.createElement("section"); sek.className = "sek";
+      var hd = document.createElement("header");
+      hd.innerHTML = "<div class='nn'><b>" + esc(s.ime) + "</b><span>" + esc(s.ref) + "</span></div><span class='br'></span>";
+      sek.appendChild(hd);
+      var site = document.createElement("button"); site.className = "site"; site.type = "button"; site.textContent = "✓ Сè во оваа секција е чисто";
+      sek.appendChild(site);
+      var ul = document.createElement("ul"); ul.className = "lista"; sek.appendChild(ul);
+      var vSek = [];
+      s.stavki.forEach(function(st, ii){
+        var k = kluc(si, ii), red = naRed(ob, st.ime, st.fr);
+        var li = document.createElement("li"); li.className = "st";
+        if(!red && !t.stavki[k]) li.classList.add("nered");
+        var pod = [];
+        if(st.pod) pod.push(st.pod.join(" · "));
+        if(st.odg) pod.push("одг.: " + st.odg);
+        if(!red){ pod.push("направено " + mk((POSL[ob] || {})[st.ime]) + " — не е на ред"); }
+        li.innerHTML = "<button class='tap' type='button'><span class='kv'></span><span class='tx'><b>" + esc(st.ime) + "</b>" + (pod.length ? "<small>" + esc(pod.join(" — ")) + "</small>" : "") + "</span>" + (st.fr !== "Д" ? "<span class='fr'>" + FR[st.fr] + "</span>" : "") + "</button><button class='neb' type='button' aria-label='Не е чисто'>✕</button><div class='zab'><input placeholder='Што не е во ред / преземена мерка'></div>";
+        var tap = li.querySelector(".tap"), neb = li.querySelector(".neb"), inp = li.querySelector("input");
+        function osvezi(){ var z = t.stavki[k]; li.classList.toggle("ok", !!z && z.s === "ok"); li.classList.toggle("ne", !!z && z.s === "ne");
+          li.querySelector(".kv").textContent = z ? (z.s === "ok" ? "✓" : "✕") : ""; inp.value = (z && z.zab) || ""; }
+        tap.addEventListener("click", function(){ var z = t.stavki[k]; if(z && z.s === "ok") delete t.stavki[k]; else t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim()}; zacuvaj(); osvezi(); broj(); });
+        neb.addEventListener("click", function(){ var z = t.stavki[k]; if(z && z.s === "ne") delete t.stavki[k]; else { t.stavki[k] = {s: "ne", cas: cas(), koj: el("koj").value.trim(), zab: ""}; setTimeout(function(){ inp.focus(); }, 50); } zacuvaj(); osvezi(); broj(); });
+        inp.addEventListener("input", function(){ if(t.stavki[k]){ t.stavki[k].zab = inp.value; zacuvaj(); } });
+        osvezi(); ul.appendChild(li);
+        if(red) vSek.push(k);
+      });
+      site.addEventListener("click", function(){ vSek.forEach(function(k){ if(!t.stavki[k]) t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim()}; }); zacuvaj(); crtajLista(); });
+      hd.addEventListener("click", function(){ sek.classList.toggle("zatvorena"); });
+      var zavrseni = vSek.filter(function(k){ return t.stavki[k]; }).length;
+      hd.querySelector(".br").textContent = zavrseni + "/" + vSek.length;
+      if(vSek.length && zavrseni === vSek.length) sek.classList.add("zatvorena");
+      h.appendChild(sek);
+    });
+    broj();
+  }
+  function broj(){
+    var r = presmetaj(akt);
+    el("brojac").textContent = r.gotovo + " / " + r.vk;
+    el("brojacNe").textContent = r.ne ? (r.ne + " не се во ред") : (r.gotovo === r.vk ? "сè е проверено" : (r.vk - r.gotovo) + " останати");
+    document.querySelectorAll(".sek").forEach(function(sek){ var b = sek.querySelector(".br"), n = sek.querySelectorAll(".st:not(.nered)").length, g = sek.querySelectorAll(".st.ok:not(.nered),.st.ne:not(.nered)").length; b.textContent = g + "/" + n; });
+  }
+  function zacuvaj(){ pisi(K_TEK, TEK); }
+
+  // ── завршување и праќање ─────────────────────────────────
+  function zapis(ob, samoNovi){
+    var t = zaDenes(ob), r = presmetaj(ob), redovi = [];
+    O[ob].sekcii.forEach(function(s, si){ s.stavki.forEach(function(st, ii){ var z = t.stavki[kluc(si, ii)]; if(!z || (samoNovi && z.pr)) return;
+      redovi.push({sekcija: s.ime, ref: s.ref, stavka: st.ime, fr: st.fr, s: z.s, cas: z.cas, koj: z.koj, zab: z.zab || ""}); }); });
+    return {id: ob + "-" + t.den + "-" + Date.now().toString(36), objekt: ob, den: t.den, koj: el("koj").value.trim(), vreme: new Date().toISOString(), vk: r.vk, ok: r.ok, ne: r.ne, redovi: redovi};
+  }
+  el("zavrsi").addEventListener("click", function(){
+    var r = presmetaj(akt);
+    if(!r.gotovo){ kazi("Нема проверени ставки."); return; }
+    var bezZab = zaDenes(akt), fali = Object.keys(bezZab.stavki).filter(function(k){ return bezZab.stavki[k].s === "ne" && !bezZab.stavki[k].zab; }).length;
+    if(fali){ kazi("Опиши што не е во ред кај ставките со ✕ (" + fali + ")."); return; }
+    var z = zapis(akt, true);
+    if(!z.redovi.length){ kazi("Сè е веќе пратено."); return; }
+    Object.keys(bezZab.stavki).forEach(function(k){ bezZab.stavki[k].pr = true; }); zacuvaj();
+    z.redovi.forEach(function(x){ (POSL[akt] = POSL[akt] || {})[x.stavka] = z.den; }); pisi(K_POSL, POSL);
+    RED.unshift(z); pisi(K_RED, RED);
+    kazi(r.gotovo < r.vk ? ("Зачувано " + r.gotovo + " од " + r.vk + ". Останатите остануваат отворени.") : "Проверката е завршена.", 3200);
+    // Неделните/месечните веќе не се на ред; дневните остануваат за подоцна ако не се пополнети.
+    probajPrati(); pokaziPocetna();
+  });
+
+  var pratam = false;
+  function probajPrati(){
+    if(pratam || !RED.length || !navigator.onLine || !Otkup.smetka()) { crtajZnak(); return Promise.resolve(); }
+    pratam = true;
+    return Otkup.graph("/sites/" + SAJT).then(function(s){
+      var L = "/sites/" + s.id + "/lists/" + LISTA;
+      function sledno(){
+        if(!RED.length) return Promise.resolve();
+        var z = RED[RED.length - 1];
+        var tekst = z.redovi.map(function(x){ return (x.s === "ok" ? "✓ " : "✕ ") + x.sekcija + " — " + x.stavka + " (" + x.cas + (x.koj ? ", " + x.koj : "") + ")" + (x.zab ? " → " + x.zab : ""); }).join("\n");
+        return Otkup.graph(L + "/items", {method: "POST", body: {fields: {
+          Title: O[z.objekt].ime + " " + mk(z.den), Objekt: O[z.objekt].ime, Den: z.den, Koj: z.koj, Vreme: z.vreme,
+          Vkupno: z.vk, Ok: z.ok, Neispravni: z.ne, Detali: tekst, Podatoci: JSON.stringify(z.redovi), LokalenId: z.id }}})
+        .then(function(){ RED.pop(); IST.unshift({objekt: z.objekt, den: z.den, vk: z.vk, ok: z.ok, ne: z.ne}); IST = IST.slice(0, 40); pisi(K_RED, RED); pisi(K_IST, IST); return sledno(); });
+      }
+      return sledno();
+    }).catch(function(e){ if(e && e.status === 404) kazi("Листата „" + LISTA + "“ ја нема на Квалитет — јави на администратор."); else if(e && e.status === 403) kazi("Сметката нема право да пишува во Квалитет."); })
+      .then(function(){ pratam = false; crtajZnak(); if(!akt) crtajPocetna(); });
+  }
+
+  // ── печатење (за IFS папка) ──────────────────────────────
+  el("pecatiKop").addEventListener("click", function(){
+    var z = zapis(akt), ob = O[akt], posl = "";
+    var h = "<h1>" + esc(ob.firma) + " — Проверка на чистота</h1><p>Датум: <b>" + mk(z.den) + "</b> · Проверил: <b>" + esc(z.koj) + "</b> · Основа: " + esc(ob.ref) + " · Проверени " + z.ok + "+" + z.ne + " од " + z.vk + "</p><table><thead><tr><th>Ставка</th><th>Фр.</th><th>Чисто</th><th>Час</th><th>Проверил</th><th>Забелешка / корективна мерка</th></tr></thead><tbody>";
+    var t = zaDenes(akt);
+    ob.sekcii.forEach(function(s, si){ h += "<tr class='sekt'><td colspan='6'>" + esc(s.ime) + " — " + esc(s.ref) + "</td></tr>";
+      s.stavki.forEach(function(st, ii){ var x = t.stavki[kluc(si, ii)];
+        if(!x && !naRed(akt, st.ime, st.fr)) return;
+        h += "<tr><td>" + esc(st.ime) + "</td><td>" + st.fr + "</td><td>" + (x ? (x.s === "ok" ? "✓ да" : "✕ не") : "") + "</td><td>" + (x ? x.cas : "") + "</td><td>" + esc(x ? x.koj : "") + "</td><td>" + esc(x ? x.zab || "" : "") + "</td></tr>"; }); });
+    h += "</tbody></table><p>Потпис на проверил: ____________________ &nbsp;&nbsp; Потпис Квалитет / HACCP: ____________________</p>";
+    el("pecati").innerHTML = h; window.print();
+  });
+
+  // ── врска и сметка ───────────────────────────────────────
+  function crtajZnak(){
+    var z = el("znak");
+    if(RED.length){ z.textContent = RED.length + " чека"; z.className = "znak lose"; return; }
+    if(!navigator.onLine){ z.textContent = "нема мрежа"; z.className = "znak lose"; return; }
+    if(!Otkup.smetka()){ z.textContent = "не е најавен"; z.className = "znak lose"; return; }
+    z.textContent = "поврзан"; z.className = "znak";
+  }
+  function crtajSmetka(){ var a = Otkup.smetka(); el("smetka").textContent = a ? (a.name || a.username) : "не е најавен"; el("najava").textContent = a ? "Одјави се" : "Најави се";
+    if(a && !el("koj").value) el("koj").value = a.name || ""; crtajZnak(); }
+  el("najava").addEventListener("click", function(){ if(Otkup.smetka()){ if(RED.length){ kazi("Прво да се пратат проверките што чекаат."); return; } Otkup.odjavi(); } else Otkup.najavi(); });
+  window.addEventListener("online", function(){ crtajZnak(); probajPrati(); });
+  window.addEventListener("offline", crtajZnak);
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden){ if(akt) crtajLista(); else crtajPocetna(); probajPrati(); } });
+
+  el("kFabrika").addEventListener("click", function(){ otvori("fabrika"); });
+  el("kMlekara").addEventListener("click", function(){ otvori("mlekara"); });
+  el("nazad").addEventListener("click", pokaziPocetna);
+  el("koj").value = citaj(K_KOJ, "");
+  el("koj").addEventListener("change", function(){ pisi(K_KOJ, el("koj").value.trim()); });
+
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
+  pokaziPocetna();
+  Otkup.init().then(function(){ crtajSmetka(); probajPrati(); }).catch(function(){ crtajSmetka(); });
+})();
+</script>
+</body>
+</html>

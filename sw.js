@@ -1,8 +1,8 @@
 /* Service worker: ја чува целата апликација на уредот за да се отвора и без интернет.
    Податоците (списоци, внесови) НЕ минуваат тука — тие одат директно до SharePoint кога има мрежа. */
-var VERZIJA = "otkup-2026-10-08b";
+var VERZIJA = "otkup-2026-10-23a";
 var DATOTEKI = [
-  "./", "./index.html", "./app.js", "./zaednicko.js", "./config.js", "./manifest.webmanifest",
+  "./", "./index.html", "./app.js", "./zaednicko.js", "./config.js", "./manifest.webmanifest", "./cistota.html", "./cistota_podatoci.js",
   "./jsQR.js", "./msal-browser.min.js",
   "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"
 ];
