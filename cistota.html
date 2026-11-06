@@ -71,8 +71,16 @@ h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spaci
 .st.ne{background:var(--ne-meko)}
 .st.ne .kv{background:var(--ne);border-color:var(--ne);color:#fff}
 .st .zab{display:none;width:100%;padding:0 14px 12px 56px}
-.st.ne{flex-wrap:wrap}
-.st.ne .zab{display:block}
+.st.ne,.st.zo{flex-wrap:wrap}
+.st.ne .zab,.st.zo .zab{display:block}
+.st .dz{display:none;margin-top:4px;font-size:12.5px;font-weight:600;color:var(--akcent);background:none;border:0;padding:2px 0;cursor:pointer}
+.st.ok:not(.zo) .dz{display:inline-block}
+.st.ok.zo .zab input{border-color:var(--rab)}
+.st .mesta{width:100%;display:flex;gap:10px;padding:0 14px 12px 56px}
+.st .mesta label{flex:1;font-size:12.5px;color:var(--bledo)}
+.st .mesta input{display:block;width:100%;margin-top:3px;padding:10px;border:1px solid var(--rab);border-radius:9px;background:var(--pozadina);color:var(--tekst);font-family:"JetBrains Mono",monospace;font-size:17px}
+.st.ins{flex-wrap:wrap}
+.st .zt{display:block;font-size:12.5px;color:var(--akcent);margin-top:2px}
 .st.ne .zab input{width:100%;padding:9px 10px;border:1px solid var(--ne);border-radius:9px;background:var(--karta);color:var(--tekst)}
 .st.nered{opacity:.5}
 .dno{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--karta);border-top:1px solid var(--rab);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center}
@@ -240,16 +248,36 @@ h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spaci
         if(st.odg) pod.push("одг.: " + st.odg);
         if(!red){ pod.push("направено " + mk((POSL[ob] || {})[st.ime]) + " — не е на ред"); }
         li.innerHTML = "<button class='tap' type='button'><span class='kv'></span><span class='tx'><b>" + esc(st.ime) + "</b>" + (pod.length ? "<small>" + esc(pod.join(" — ")) + "</small>" : "") + "</span>" + (st.fr !== "Д" ? "<span class='fr'>" + FR[st.fr] + "</span>" : "") + "</button><button class='neb' type='button' aria-label='Не е чисто'>✕</button><div class='zab'><input placeholder='Што не е во ред / преземена мерка'></div>";
+        var dz = document.createElement("span"); dz.setAttribute("role", "button"); dz.className = "dz"; dz.textContent = "＋ забелешка";
         var tap = li.querySelector(".tap"), neb = li.querySelector(".neb"), inp = li.querySelector("input");
+        li.querySelector(".tx").appendChild(dz);
+        var mInputs = [];
+        if(st.tip === "insekti"){
+          li.classList.add("ins"); neb.hidden = true; dz.remove();
+          var md = document.createElement("div"); md.className = "mesta";
+          st.mesta.forEach(function(m, mi){ var lb = document.createElement("label"); lb.textContent = m + " — број инсекти";
+            var ni = document.createElement("input"); ni.type = "number"; ni.min = "0"; ni.inputMode = "numeric"; ni.placeholder = "0";
+            lb.appendChild(ni); md.appendChild(lb); mInputs.push(ni);
+            ni.addEventListener("input", function(){
+              var vr = mInputs.map(function(x){ return x.value.trim(); });
+              if(vr.every(function(v){ return v !== ""; })){ var o = {}; st.mesta.forEach(function(mm, j){ o[mm] = Number(vr[j]); });
+                t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim(), mesta: o}; }
+              else delete t.stavki[k];
+              zacuvaj(); osvezi(); broj(); }); });
+          li.appendChild(md);
+        }
         function osvezi(){ var z = t.stavki[k]; li.classList.toggle("ok", !!z && z.s === "ok"); li.classList.toggle("ne", !!z && z.s === "ne");
-          li.querySelector(".kv").textContent = z ? (z.s === "ok" ? "✓" : "✕") : ""; inp.value = (z && z.zab) || ""; }
-        tap.addEventListener("click", function(){ var z = t.stavki[k]; if(z && z.s === "ok") delete t.stavki[k]; else t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim()}; zacuvaj(); osvezi(); broj(); });
+          li.querySelector(".kv").textContent = z ? (z.s === "ok" ? "✓" : "✕") : ""; inp.value = (z && z.zab) || "";
+          if(st.tip === "insekti" && z && z.mesta) st.mesta.forEach(function(mm, j){ if(mInputs[j] && mInputs[j].value === "") mInputs[j].value = z.mesta[mm]; });
+          li.classList.toggle("zo", !!z && z.s === "ok" && (!!z.zab || li._zo === true));
+          inp.placeholder = (z && z.s === "ok") ? "Забелешка (по избор)" : "Што не е во ред / преземена мерка"; }
+        tap.addEventListener("click", function(e){ if(st.tip === "insekti"){ mInputs[0].focus(); return; } if(e.target === dz){ li._zo = true; osvezi(); setTimeout(function(){ inp.focus(); }, 30); return; } var z = t.stavki[k]; if(z && z.s === "ok") delete t.stavki[k]; else t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim()}; zacuvaj(); osvezi(); broj(); });
         neb.addEventListener("click", function(){ var z = t.stavki[k]; if(z && z.s === "ne") delete t.stavki[k]; else { t.stavki[k] = {s: "ne", cas: cas(), koj: el("koj").value.trim(), zab: ""}; setTimeout(function(){ inp.focus(); }, 50); } zacuvaj(); osvezi(); broj(); });
-        inp.addEventListener("input", function(){ if(t.stavki[k]){ t.stavki[k].zab = inp.value; zacuvaj(); } });
+                inp.addEventListener("input", function(){ if(t.stavki[k]){ t.stavki[k].zab = inp.value; zacuvaj(); } });
         osvezi(); ul.appendChild(li);
         if(red) vSek.push(k);
       });
-      site.addEventListener("click", function(){ vSek.forEach(function(k){ if(!t.stavki[k]) t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim()}; }); zacuvaj(); crtajLista(); });
+      site.addEventListener("click", function(){ vSek.forEach(function(k){ if(!t.stavki[k] && s.stavki[+k.split(".")[1]].tip !== "insekti") t.stavki[k] = {s: "ok", cas: cas(), koj: el("koj").value.trim()}; }); zacuvaj(); crtajLista(); });
       hd.addEventListener("click", function(){ sek.classList.toggle("zatvorena"); });
       var zavrseni = vSek.filter(function(k){ return t.stavki[k]; }).length;
       hd.querySelector(".br").textContent = zavrseni + "/" + vSek.length;
@@ -270,7 +298,7 @@ h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spaci
   function zapis(ob, samoNovi){
     var t = zaDenes(ob), r = presmetaj(ob), redovi = [];
     O[ob].sekcii.forEach(function(s, si){ s.stavki.forEach(function(st, ii){ var z = t.stavki[kluc(si, ii)]; if(!z || (samoNovi && z.pr)) return;
-      redovi.push({sekcija: s.ime, ref: s.ref, stavka: st.ime, fr: st.fr, s: z.s, cas: z.cas, koj: z.koj, zab: z.zab || ""}); }); });
+      redovi.push({sekcija: s.ime, ref: s.ref, stavka: st.ime, fr: st.fr, s: z.s, cas: z.cas, koj: z.koj, zab: z.zab || "", mesta: z.mesta || null}); }); });
     return {id: ob + "-" + t.den + "-" + Date.now().toString(36), objekt: ob, den: t.den, koj: el("koj").value.trim(), vreme: new Date().toISOString(), vk: r.vk, ok: r.ok, ne: r.ne, redovi: redovi};
   }
   el("zavrsi").addEventListener("click", function(){
@@ -297,7 +325,7 @@ h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spaci
       function sledno(){
         if(!RED.length) return Promise.resolve();
         var z = RED[RED.length - 1];
-        var tekst = z.redovi.map(function(x){ return (x.s === "ok" ? "✓ " : "✕ ") + x.sekcija + " — " + x.stavka + " (" + x.cas + (x.koj ? ", " + x.koj : "") + ")" + (x.zab ? " → " + x.zab : ""); }).join("\n");
+        var tekst = z.redovi.map(function(x){ return (x.s === "ok" ? "✓ " : "✕ ") + x.sekcija + " — " + x.stavka + (x.mesta ? ": " + Object.keys(x.mesta).map(function(m){ return m + " = " + x.mesta[m]; }).join(", ") : "") + " (" + x.cas + (x.koj ? ", " + x.koj : "") + ")" + (x.zab ? " → " + x.zab : ""); }).join("\n");
         return Otkup.graph(L + "/items", {method: "POST", body: {fields: {
           Title: O[z.objekt].ime + " " + mk(z.den), Objekt: O[z.objekt].ime, Den: z.den, Koj: z.koj, Vreme: z.vreme,
           Vkupno: z.vk, Ok: z.ok, Neispravni: z.ne, Detali: tekst, Podatoci: JSON.stringify(z.redovi), LokalenId: z.id }}})
@@ -316,7 +344,7 @@ h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spaci
     ob.sekcii.forEach(function(s, si){ h += "<tr class='sekt'><td colspan='6'>" + esc(s.ime) + " — " + esc(s.ref) + "</td></tr>";
       s.stavki.forEach(function(st, ii){ var x = t.stavki[kluc(si, ii)];
         if(!x && !naRed(akt, st.ime, st.fr)) return;
-        h += "<tr><td>" + esc(st.ime) + "</td><td>" + st.fr + "</td><td>" + (x ? (x.s === "ok" ? "✓ да" : "✕ не") : "") + "</td><td>" + (x ? x.cas : "") + "</td><td>" + esc(x ? x.koj : "") + "</td><td>" + esc(x ? x.zab || "" : "") + "</td></tr>"; }); });
+        h += "<tr><td>" + esc(st.ime) + "</td><td>" + st.fr + "</td><td>" + (x ? (x.s === "ok" ? "✓ да" : "✕ не") : "") + "</td><td>" + (x ? x.cas : "") + "</td><td>" + esc(x ? x.koj : "") + "</td><td>" + esc(x ? [x.mesta ? Object.keys(x.mesta).map(function(m){ return m + ": " + x.mesta[m]; }).join(", ") : "", x.zab || ""].filter(Boolean).join(" — ") : "") + "</td></tr>"; }); });
     h += "</tbody></table><p>Потпис на проверил: ____________________ &nbsp;&nbsp; Потпис Квалитет / HACCP: ____________________</p>";
     el("pecati").innerHTML = h; window.print();
   });

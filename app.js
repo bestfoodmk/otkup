@@ -176,6 +176,19 @@
     });
   });
 
+
+  // ── GPS ─────────────────────────────────────────────────
+  // Позицијата се бара штом ќе се отвори внесот, за да е готова при „Зачувај“.
+  var GPS = null, gpsVreme = 0;
+  function baraGPS(){
+    if(!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function(p){
+      GPS = {lat: Math.round(p.coords.latitude * 1e6) / 1e6, lon: Math.round(p.coords.longitude * 1e6) / 1e6, tocnost: Math.round(p.coords.accuracy)};
+      gpsVreme = Date.now();
+    }, function(){}, {enableHighAccuracy: true, timeout: 8000, maximumAge: 20000});
+  }
+  function zemiGPS(){ return (GPS && Date.now() - gpsVreme < 120000) ? GPS : null; }
+
   // ── внес ────────────────────────────────────────────────
   var tekoven = null;
   function obrabotiKod(tekst){
@@ -209,6 +222,7 @@
       });
     }
     el("litri").value = ""; el("temp").value = ""; el("zabel").value = "";
+    baraGPS();
     el("ekSken").hidden = true; el("ekVnes").hidden = false;
     setTimeout(function(){ el("litri").focus(); }, 120);
   }
@@ -225,11 +239,12 @@
     if(!/^[0-9]+$/.test(reon)){ kazi("Не знам во кој реон оди " + tekoven.koop.sifra + " — освежи го списокот."); return; }
     var zapis = {
       id: String(Date.now()) + "-" + Math.random().toString(36).slice(2, 7),
-      den: PODESI.den, reon: reon, reonIme: tekoven.koop.reon || reon,
+      den: (proveriDen(), PODESI.den), reon: reon, reonIme: tekoven.koop.reon || reon,
       sifra: tekoven.koop.sifra, ime: tekoven.koop.ime, vid: vid,
       litri: l, temp: el("temp").value.trim(), z: el("zabel").value.trim(),
       koj: PODESI.koj, vreme: new Date().toISOString(), pratem: null
     };
+    var g = zemiGPS(); if(g){ zapis.lat = g.lat; zapis.lon = g.lon; zapis.tocnost = g.tocnost; }
     VNES.push(zapis); pisi(K_VNES, VNES);
     kazi((tekoven.koop.ime || tekoven.koop.sifra) + ": " + fmt(l) + " л");
     tekoven = null; el("ekVnes").hidden = true; el("ekSken").hidden = false;
@@ -356,7 +371,16 @@
   // ── старт ───────────────────────────────────────────────
   el("den").value = PODESI.den || denes();
   el("koj").value = PODESI.koj || "";
-  if(PODESI.den && PODESI.den !== denes()){ el("den").value = denes(); }
+  // Датумот се менува сам на денешен: при отворање и кога апликацијата ќе се врати на екран (iPad не ја затвора).
+  function proveriDen(){
+    if(PODESI.den !== denes()){
+      PODESI.den = denes(); pisi(K_PODESI, PODESI);
+      el("den").value = PODESI.den; crtajPod(); crtajSpisok();
+    }
+  }
+  proveriDen();
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) proveriDen(); });
+  window.addEventListener("focus", proveriDen);
   napolniReoni(); crtajPod(); crtajSpisok(); crtajStatusPrati(); crtajStatusSpisok(); osveziBrojka(); crtajZnak();
   pokazi("Sken");
 
